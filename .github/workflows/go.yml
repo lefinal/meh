@@ -1,0 +1,101 @@
+name: Go
+
+on: [ push, pull_request ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Install Deps
+        run: make dep
+
+      - name: Test
+        run: make test
+
+  race_detection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Install Deps
+        run: make dep
+
+      - name: Race detection
+        run: make race
+
+  memory_sanitization:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Install Clang
+        run: |
+          sudo apt update
+          sudo apt install clang-11
+      - name: Install Deps
+        run: make dep
+
+      - name: Memory sanitization
+        run: make msan
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Install Deps
+        run: make dep
+
+      - name: Install revive
+        run: go install github.com/mgechev/revive@latest
+
+      - name: Lint
+        run: make lint
+
+  code_coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Install Deps
+        run: make dep
+
+      - name: Create Code Coverage
+        run: make coverhtml
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: OS
+          fail_ci_if_error: true
+          files: ./coverage.txt
+          flags: unittests
+          verbose: true

@@ -2,7 +2,7 @@
 package mehlog
 
 import (
-	"github.com/lefinal/meh/meh"
+	"github.com/lefinal/meh"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"sync"

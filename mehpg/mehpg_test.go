@@ -2,7 +2,7 @@ package mehpg
 
 import (
 	"errors"
-	"github.com/lefinal/meh/meh"
+	"github.com/lefinal/meh"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )

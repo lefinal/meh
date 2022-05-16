@@ -2,7 +2,7 @@ package mehlog
 
 import (
 	"errors"
-	"github.com/lefinal/meh/meh"
+	"github.com/lefinal/meh"
 	"github.com/lefinal/zaprec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

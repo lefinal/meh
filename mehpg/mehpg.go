@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/jackc/pgconn"
-	"github.com/lefinal/meh/meh"
+	"github.com/lefinal/meh"
 	"strings"
 )
 

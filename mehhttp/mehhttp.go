@@ -1,7 +1,7 @@
 package mehhttp
 
 import (
-	"github.com/lefinal/meh/meh"
+	"github.com/lefinal/meh"
 	"github.com/lefinal/meh/mehlog"
 	"go.uber.org/zap"
 	"net/http"

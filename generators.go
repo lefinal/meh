@@ -55,3 +55,13 @@ func NewNotFoundErrFromErr(message string, details Details) error {
 		Details: details,
 	}
 }
+
+// NewUnauthorizedErr creates a new ErrUnauthorized with the given message and
+// details.
+func NewUnauthorizedErr(message string, details Details) error {
+	return &Error{
+		Code:    ErrUnauthorized,
+		Message: message,
+		Details: details,
+	}
+}

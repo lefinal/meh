@@ -21,8 +21,8 @@ func NewInternalErr(message string, details Details) error {
 }
 
 // NewBadInputErr creates a new ErrBadInput with the given message and details.
-func NewBadInputErr(publicMessage string, details Details) error {
-	return NewBadInputErrFromErr(nil, publicMessage, details)
+func NewBadInputErr(message string, details Details) error {
+	return NewBadInputErrFromErr(nil, message, details)
 }
 
 // NewBadInputErrFromErr creates a new ErrBadInput with the given error to be
@@ -51,6 +51,16 @@ func NewNotFoundErr(message string, details Details) error {
 func NewNotFoundErrFromErr(message string, details Details) error {
 	return &Error{
 		Code:    ErrNotFound,
+		Message: message,
+		Details: details,
+	}
+}
+
+// NewUnauthorizedErr creates a new ErrUnauthorized with the given message and
+// details.
+func NewUnauthorizedErr(message string, details Details) error {
+	return &Error{
+		Code:    ErrUnauthorized,
 		Message: message,
 		Details: details,
 	}

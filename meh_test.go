@@ -236,3 +236,23 @@ func TestApplyCode(t *testing.T) {
 	assert.Equal(t, originalErr, e.WrappedErr, "should have kept original error")
 	assert.Equal(t, ErrInternal, ErrorCode(e), "should have applied correct error code")
 }
+
+// NilOrWrapSuite tests NilOrWrap.
+type NilOrWrapSuite struct {
+	suite.Suite
+}
+
+func (suite *NilOrWrapSuite) TestNil() {
+	e := NilOrWrap(nil, "meow", nil)
+	suite.Nil(e, "should return nil")
+}
+
+func (suite *NilOrWrapSuite) TestNotNil() {
+	originalErr := NewInternalErr("sad life", Details{"meow": "woof"})
+	e := NilOrWrap(originalErr, "hello", Details{"hello": "world"})
+	suite.Equal(Wrap(originalErr, "hello", Details{"hello": "world"}), e, "should have been wrapped")
+}
+
+func TestNilOrWrap(t *testing.T) {
+	suite.Run(t, new(NilOrWrapSuite))
+}

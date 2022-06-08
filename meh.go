@@ -210,3 +210,12 @@ func ToMap(err error) map[string]interface{} {
 	m[MapFieldErrorMessage] = err.Error()
 	return m
 }
+
+// NilOrWrap returns nil if the given error is nil or calls meh.Wrap on it
+// otherwise.
+func NilOrWrap(err error, message string, details Details) error {
+	if err != nil {
+		return Wrap(err, message, details)
+	}
+	return nil
+}

@@ -21,8 +21,8 @@ func NewInternalErr(message string, details Details) error {
 }
 
 // NewBadInputErr creates a new ErrBadInput with the given message and details.
-func NewBadInputErr(publicMessage string, details Details) error {
-	return NewBadInputErrFromErr(nil, publicMessage, details)
+func NewBadInputErr(message string, details Details) error {
+	return NewBadInputErrFromErr(nil, message, details)
 }
 
 // NewBadInputErrFromErr creates a new ErrBadInput with the given error to be

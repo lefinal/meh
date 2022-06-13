@@ -120,9 +120,9 @@ func (suite *NewNotFoundErrFromErrSuite) TestOK() {
 	message := "Hello World!"
 	details := Details{"hello": "world"}
 
-	err := NewBadInputErrFromErr(originalErr, message, details).(*Error)
+	err := NewNotFoundErrFromErr(originalErr, message, details).(*Error)
 
-	suite.Equal(ErrBadInput, err.Code, "should have set correct error code")
+	suite.Equal(ErrNotFound, err.Code, "should have set correct error code")
 	suite.Equal(originalErr, err.WrappedErr, "should have applied the original error")
 	suite.Equal(message, err.Message, "should have applied message")
 	suite.Equal(details, err.Details, "should have applied details")

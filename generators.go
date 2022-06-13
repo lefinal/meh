@@ -48,11 +48,12 @@ func NewNotFoundErr(message string, details Details) error {
 
 // NewNotFoundErrFromErr creates a new ErrNotFound with the given error to be
 // wrapped, message and details.
-func NewNotFoundErrFromErr(message string, details Details) error {
+func NewNotFoundErrFromErr(err error, message string, details Details) error {
 	return &Error{
-		Code:    ErrNotFound,
-		Message: message,
-		Details: details,
+		Code:       ErrNotFound,
+		WrappedErr: err,
+		Message:    message,
+		Details:    details,
 	}
 }
 

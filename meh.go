@@ -24,8 +24,11 @@ const (
 	ErrNotFound Code = "not-found"
 	// ErrNeutral is used mainly for wrapping in order to not change the Code.
 	ErrNeutral Code = "neutral"
-	// ErrUnauthorized is used for unauthorized access to resources.
+	// ErrUnauthorized is used for when the caller is not known but a resource
+	// required authorized access.
 	ErrUnauthorized Code = "unauthorized"
+	// ErrForbidden is used for unauthorized access to resources.
+	ErrForbidden Code = "forbidden"
 )
 
 // Details are optionally provided error details in Error.Details that are used

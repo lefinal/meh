@@ -48,11 +48,12 @@ func NewNotFoundErr(message string, details Details) error {
 
 // NewNotFoundErrFromErr creates a new ErrNotFound with the given error to be
 // wrapped, message and details.
-func NewNotFoundErrFromErr(message string, details Details) error {
+func NewNotFoundErrFromErr(err error, message string, details Details) error {
 	return &Error{
-		Code:    ErrNotFound,
-		Message: message,
-		Details: details,
+		Code:       ErrNotFound,
+		WrappedErr: err,
+		Message:    message,
+		Details:    details,
 	}
 }
 
@@ -63,5 +64,37 @@ func NewUnauthorizedErr(message string, details Details) error {
 		Code:    ErrUnauthorized,
 		Message: message,
 		Details: details,
+	}
+}
+
+// NewUnauthorizedErrFromErr creates a new ErrUnauthorized with the given error
+// to be wrapped, message and details.
+func NewUnauthorizedErrFromErr(err error, message string, details Details) error {
+	return &Error{
+		Code:       ErrUnauthorized,
+		WrappedErr: err,
+		Message:    message,
+		Details:    details,
+	}
+}
+
+// NewForbiddenErr creates a new ErrForbidden with the given message and
+// details.
+func NewForbiddenErr(message string, details Details) error {
+	return &Error{
+		Code:    ErrForbidden,
+		Message: message,
+		Details: details,
+	}
+}
+
+// NewForbiddenErrFromErr creates a new ErrForbidden with the given error to be
+// wrapped, message and details.
+func NewForbiddenErrFromErr(err error, message string, details Details) error {
+	return &Error{
+		Code:       ErrForbidden,
+		WrappedErr: err,
+		Message:    message,
+		Details:    details,
 	}
 }

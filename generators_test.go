@@ -131,3 +131,87 @@ func (suite *NewNotFoundErrFromErrSuite) TestOK() {
 func TestNewNotFoundErrFromErr(t *testing.T) {
 	suite.Run(t, new(NewNotFoundErrFromErrSuite))
 }
+
+// NewUnauthorizedErrSuite tests NewUnauthorizedErr.
+type NewUnauthorizedErrSuite struct {
+	suite.Suite
+}
+
+func (suite *NewUnauthorizedErrSuite) TestOK() {
+	message := "Hello World!"
+	details := Details{"hello": "world"}
+
+	err := NewUnauthorizedErr(message, details).(*Error)
+
+	suite.Equal(ErrUnauthorized, err.Code, "should have set correct error code")
+	suite.Equal(message, err.Message, "should not have applied message")
+	suite.Equal(details, err.Details, "should have applied details")
+}
+
+func TestNewUnauthorizedErr(t *testing.T) {
+	suite.Run(t, new(NewUnauthorizedErrSuite))
+}
+
+// NewUnauthorizedErrFromErrSuite tests NewUnauthorizedErrFromErr.
+type NewUnauthorizedErrFromErrSuite struct {
+	suite.Suite
+}
+
+func (suite *NewUnauthorizedErrFromErrSuite) TestOK() {
+	originalErr := errors.New("yo")
+	message := "Hello World!"
+	details := Details{"hello": "world"}
+
+	err := NewUnauthorizedErrFromErr(originalErr, message, details).(*Error)
+
+	suite.Equal(ErrUnauthorized, err.Code, "should have set correct error code")
+	suite.Equal(originalErr, err.WrappedErr, "should have applied the original error")
+	suite.Equal(message, err.Message, "should have applied message")
+	suite.Equal(details, err.Details, "should have applied details")
+}
+
+func TestNewUnauthorizedErrFromErr(t *testing.T) {
+	suite.Run(t, new(NewUnauthorizedErrFromErrSuite))
+}
+
+// NewForbiddenErrSuite tests NewForbiddenErr.
+type NewForbiddenErrSuite struct {
+	suite.Suite
+}
+
+func (suite *NewForbiddenErrSuite) TestOK() {
+	message := "Hello World!"
+	details := Details{"hello": "world"}
+
+	err := NewForbiddenErr(message, details).(*Error)
+
+	suite.Equal(ErrForbidden, err.Code, "should have set correct error code")
+	suite.Equal(message, err.Message, "should not have applied message")
+	suite.Equal(details, err.Details, "should have applied details")
+}
+
+func TestNewForbiddenErr(t *testing.T) {
+	suite.Run(t, new(NewForbiddenErrSuite))
+}
+
+// NewForbiddenErrFromErrSuite tests NewForbiddenErrFromErr.
+type NewForbiddenErrFromErrSuite struct {
+	suite.Suite
+}
+
+func (suite *NewForbiddenErrFromErrSuite) TestOK() {
+	originalErr := errors.New("yo")
+	message := "Hello World!"
+	details := Details{"hello": "world"}
+
+	err := NewForbiddenErrFromErr(originalErr, message, details).(*Error)
+
+	suite.Equal(ErrForbidden, err.Code, "should have set correct error code")
+	suite.Equal(originalErr, err.WrappedErr, "should have applied the original error")
+	suite.Equal(message, err.Message, "should have applied message")
+	suite.Equal(details, err.Details, "should have applied details")
+}
+
+func TestNewForbiddenErrFromErr(t *testing.T) {
+	suite.Run(t, new(NewForbiddenErrFromErrSuite))
+}

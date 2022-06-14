@@ -201,6 +201,7 @@ const (
 // enhanced information regarding the error itself (Error.Code to
 // MapFieldErrorCode and the Error.Error-message to MapFieldErrorMessage).
 func ToMap(err error) map[string]interface{} {
+	e := Cast(err)
 	m := make(map[string]interface{})
 	// First, we add all details from the highest level to the lowest one.
 	for it := NewErrorUnwrapper(err); it.Next(); {
@@ -209,8 +210,8 @@ func ToMap(err error) map[string]interface{} {
 		}
 	}
 	// Then we add all metadata.
-	m[MapFieldErrorCode] = ErrorCode(err)
-	m[MapFieldErrorMessage] = err.Error()
+	m[MapFieldErrorCode] = ErrorCode(e)
+	m[MapFieldErrorMessage] = e.Error()
 	return m
 }
 

@@ -37,8 +37,9 @@ func WrapAndLog(logger *zap.Logger, err error, message string) {
 // Log the given error using the default level translator that can be set via
 // SetDefaultLevelTranslator.
 func Log(logger *zap.Logger, err error) {
+	e := meh.Cast(err)
 	defaultLevelTranslatorMutex.RLock()
-	level := defaultLevelTranslator(meh.Cast(err).Code)
+	level := defaultLevelTranslator(meh.ErrorCode(e))
 	defaultLevelTranslatorMutex.RUnlock()
 	LogToLevel(logger, level, err)
 }

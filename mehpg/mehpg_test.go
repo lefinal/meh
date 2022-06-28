@@ -17,11 +17,11 @@ func (suite *NewQueryDBErrSuite) TestOK() {
 	message := "Hello World!"
 	query := "SELECT *"
 	err := NewQueryDBErr(originalErr, message, query).(*meh.Error)
-	wrapped := meh.Cast(err).WrappedErr.(*meh.Error)
-	suite.Equal(meh.ErrInternal, err.Code, "should have set error code to internal")
-	suite.Equal(originalErr, wrapped.WrappedErr, "should have applied the original error")
+	wrapped := meh.Cast(err).WrappedErr
+	suite.Equal(meh.ErrInternal, meh.ErrorCode(err), "should have set error code to internal")
+	suite.Equal(originalErr, wrapped, "should have applied the original error")
 	suite.Equal(message, err.Message, "should have applied message")
-	suite.Equal(query, wrapped.Details["query"], "should have applied the query to details")
+	suite.Equal(query, err.Details["query"], "should have applied the query to details")
 }
 
 func TestNewQueryDBErr(t *testing.T) {

@@ -22,7 +22,7 @@ const (
 // constraint violation or data exceptions, a meh.ErrBadInput will be returned.
 // Otherwise, meh.ErrInternal.
 func NewQueryDBErr(err error, message string, query string) error {
-	detailedErr := err
+	var finalDetailedErr error
 	details := make(meh.Details)
 	details["query"] = query
 	// Check if postgres error.
@@ -33,50 +33,49 @@ func NewQueryDBErr(err error, message string, query string) error {
 		// Check for certain prefixes.
 		if strings.HasPrefix(pgErr.Code, ErrCodePrefixIntegrityConstraintViolation) {
 			// Constraint violation.
-			detailedErr = &meh.Error{
+			finalDetailedErr = &meh.Error{
 				Code:       meh.ErrBadInput,
 				Message:    "constraint violation",
 				WrappedErr: err,
 			}
 		} else if strings.HasPrefix(pgErr.Code, ErrCodePrefixDataException) {
-			detailedErr = &meh.Error{
+			finalDetailedErr = &meh.Error{
 				Code:       meh.ErrBadInput,
 				Message:    "data exception",
 				WrappedErr: err,
 			}
 		} else if strings.HasPrefix(pgErr.Code, ErrCodePrefixSyntaxErrOrAccessRuleViolation) {
 			// Syntax error
-			detailedErr = &meh.Error{
+			finalDetailedErr = &meh.Error{
 				Code:       meh.ErrInternal,
 				Message:    "syntax error",
 				WrappedErr: err,
 			}
 		} else {
 			// Otherwise, probably internal error.
-			detailedErr = &meh.Error{
+			finalDetailedErr = &meh.Error{
 				Code:       meh.ErrInternal,
 				WrappedErr: err,
 			}
 		}
 	} else if errors.Is(err, sql.ErrTxDone) {
-		detailedErr = &meh.Error{
+		finalDetailedErr = &meh.Error{
 			Code:       meh.ErrInternal,
 			Message:    "tx done",
 			WrappedErr: err,
 		}
 	} else if errors.Is(err, sql.ErrConnDone) {
-		detailedErr = &meh.Error{
+		finalDetailedErr = &meh.Error{
 			Code:       meh.ErrInternal,
 			Message:    "connection done",
 			WrappedErr: err,
 		}
 	}
-	// Any other internal error.
-	return &meh.Error{
-		Code:       meh.ErrInternal,
-		WrappedErr: meh.Wrap(detailedErr, "exec db query", details),
-		Message:    message,
+	if finalDetailedErr != nil && meh.ErrorCode(finalDetailedErr) != meh.ErrNeutral {
+		return meh.Wrap(finalDetailedErr, message, details)
 	}
+	// Any other internal error.
+	return meh.NewInternalErrFromErr(err, message, details)
 }
 
 // NewScanRowsErr creates a new meh.ErrInternal with the given error and message

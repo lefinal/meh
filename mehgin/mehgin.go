@@ -1,3 +1,4 @@
+// Package mehgin provides some wrappers and utils for bridging mehhttp and gin.
 package mehgin
 
 import (

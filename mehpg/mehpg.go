@@ -1,3 +1,4 @@
+// Package mehpg provides error functionality regarding postgres-errors.
 package mehpg
 
 import (

@@ -1,3 +1,5 @@
+// Package meh adds typed errors, codes and reusable details to Go's native
+// errors.
 package meh
 
 // NewErr creates a new Error with the given Code, message and details.

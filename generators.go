@@ -1,23 +1,30 @@
 package meh
 
-// NewInternalErrFromErr creates a new ErrInternal with the given error to be
-// wrapped, message and details.
-func NewInternalErrFromErr(err error, message string, details Details) error {
+// NewErr creates a new Error with the given Code, message and details.
+func NewErr(code Code, message string, details Details) error {
+	return NewErrFromErr(nil, code, message, details)
+}
+
+// NewErrFromErr creates a new Error with the given wrapped one, Code, message
+// and details.
+func NewErrFromErr(err error, code Code, message string, details Details) error {
 	return &Error{
-		Code:       ErrInternal,
+		Code:       code,
 		WrappedErr: err,
 		Message:    message,
 		Details:    details,
 	}
 }
 
+// NewInternalErrFromErr creates a new ErrInternal with the given error to be
+// wrapped, message and details.
+func NewInternalErrFromErr(err error, message string, details Details) error {
+	return NewErrFromErr(err, ErrInternal, message, details)
+}
+
 // NewInternalErr creates a new ErrInternal with the given message and details.
 func NewInternalErr(message string, details Details) error {
-	return &Error{
-		Code:    ErrInternal,
-		Message: message,
-		Details: details,
-	}
+	return NewErr(ErrInternal, message, details)
 }
 
 // NewBadInputErr creates a new ErrBadInput with the given message and details.
@@ -28,73 +35,41 @@ func NewBadInputErr(message string, details Details) error {
 // NewBadInputErrFromErr creates a new ErrBadInput with the given error to be
 // wrapped, message and details.
 func NewBadInputErrFromErr(err error, message string, details Details) error {
-	return &Error{
-		Code:       ErrBadInput,
-		WrappedErr: err,
-		Message:    message,
-		Details:    details,
-	}
+	return NewErrFromErr(err, ErrBadInput, message, details)
 }
 
 // NewNotFoundErr creates a new ErrNotFound with the given message and
 // details.
 func NewNotFoundErr(message string, details Details) error {
-	return &Error{
-		Code:    ErrNotFound,
-		Message: message,
-		Details: details,
-	}
+	return NewErr(ErrNotFound, message, details)
 }
 
 // NewNotFoundErrFromErr creates a new ErrNotFound with the given error to be
 // wrapped, message and details.
 func NewNotFoundErrFromErr(err error, message string, details Details) error {
-	return &Error{
-		Code:       ErrNotFound,
-		WrappedErr: err,
-		Message:    message,
-		Details:    details,
-	}
+	return NewErrFromErr(err, ErrNotFound, message, details)
 }
 
 // NewUnauthorizedErr creates a new ErrUnauthorized with the given message and
 // details.
 func NewUnauthorizedErr(message string, details Details) error {
-	return &Error{
-		Code:    ErrUnauthorized,
-		Message: message,
-		Details: details,
-	}
+	return NewErr(ErrUnauthorized, message, details)
 }
 
 // NewUnauthorizedErrFromErr creates a new ErrUnauthorized with the given error
 // to be wrapped, message and details.
 func NewUnauthorizedErrFromErr(err error, message string, details Details) error {
-	return &Error{
-		Code:       ErrUnauthorized,
-		WrappedErr: err,
-		Message:    message,
-		Details:    details,
-	}
+	return NewErrFromErr(err, ErrUnauthorized, message, details)
 }
 
 // NewForbiddenErr creates a new ErrForbidden with the given message and
 // details.
 func NewForbiddenErr(message string, details Details) error {
-	return &Error{
-		Code:    ErrForbidden,
-		Message: message,
-		Details: details,
-	}
+	return NewErr(ErrForbidden, message, details)
 }
 
 // NewForbiddenErrFromErr creates a new ErrForbidden with the given error to be
 // wrapped, message and details.
 func NewForbiddenErrFromErr(err error, message string, details Details) error {
-	return &Error{
-		Code:       ErrForbidden,
-		WrappedErr: err,
-		Message:    message,
-		Details:    details,
-	}
+	return NewErrFromErr(err, ErrForbidden, message, details)
 }

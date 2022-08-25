@@ -1,3 +1,4 @@
+// Package mehhttp provides functionality for handling and responding errors.
 package mehhttp
 
 import (

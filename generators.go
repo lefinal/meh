@@ -12,9 +12,22 @@ func NewErr(code Code, message string, details Details) error {
 func NewErrFromErr(err error, code Code, message string, details Details) error {
 	return &Error{
 		Code:       code,
-		WrappedErr: err,
+		WrappedErr: ClearPassThrough(err),
 		Message:    message,
 		Details:    details,
+	}
+}
+
+// NewPassThroughErr is similar to NewErrFromErr with the only difference that
+// Error.WrappedErrPassThrough is set to true. This makes Finalize return the
+// given error, even if wrapped inside *Error.
+func NewPassThroughErr(err error, code Code, message string, details Details) error {
+	return &Error{
+		Code:                  code,
+		WrappedErr:            err,
+		WrappedErrPassThrough: true,
+		Message:               message,
+		Details:               details,
 	}
 }
 

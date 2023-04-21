@@ -256,3 +256,105 @@ func (suite *NilOrWrapSuite) TestNotNil() {
 func TestNilOrWrap(t *testing.T) {
 	suite.Run(t, new(NilOrWrapSuite))
 }
+
+// FinalizeSuite tests Finalize.
+type FinalizeSuite struct {
+	suite.Suite
+}
+
+func (suite *FinalizeSuite) TestNilError() {
+	finalized := Finalize(nil)
+	suite.Nil(finalized)
+}
+
+func (suite *FinalizeSuite) TestNativeError() {
+	e := errors.New("sad life")
+	finalized := Finalize(e)
+	suite.Equal(ErrUnexpected, ErrorCode(finalized), "should set correct error code")
+	suite.Contains(finalized.Error(), e.Error())
+}
+
+func (suite *FinalizeSuite) TestMehErrorNoPassThrough() {
+	e := NewInternalErr("what is love", Details{"explain": "guide"})
+	finalized := Finalize(e)
+	suite.Equal(e, finalized, "should not change error")
+}
+
+func (suite *FinalizeSuite) TestMehErrorWrappedNoPassThrough() {
+	original := errors.New("sad life")
+	e := NewBadInputErrFromErr(original, "do not say", nil)
+	finalized := Finalize(e)
+	suite.Equal(e, finalized, "should not change error")
+}
+
+func (suite *FinalizeSuite) TestMehErrorPassThrough() {
+	original := errors.New("sad life")
+	e := NewPassThroughErr(original, ErrForbidden, "forbidden", Details{"package": "than"})
+	finalized := Finalize(e)
+	suite.Equal(original, finalized, "should return pass-through error")
+}
+
+func (suite *FinalizeSuite) TestMehErrorWrappedPassThrough() {
+	original := errors.New("sad life")
+	e := NewPassThroughErr(original, ErrForbidden, "forbidden", Details{"package": "than"})
+	e = Wrap(e, "cucumber wrap", nil)
+	finalized := Finalize(e)
+	suite.Equal(original, finalized, "should return pass-through error")
+}
+
+func TestFinalize(t *testing.T) {
+	suite.Run(t, new(FinalizeSuite))
+}
+
+// clearPassThroughSuite tests ClearPassThrough.
+type ClearPassThroughSuite struct {
+	suite.Suite
+}
+
+func (suite *ClearPassThroughSuite) TestNil() {
+	cleared := ClearPassThrough(nil)
+	suite.Nil(cleared)
+}
+
+func (suite *ClearPassThroughSuite) TestNativeErr() {
+	e := errors.New("sad life")
+	cleared := ClearPassThrough(e)
+	suite.Equal(e, cleared, "should return native error")
+}
+
+func (suite *ClearPassThroughSuite) TestSingleWithPassThrough() {
+	e := NewPassThroughErr(errors.New("sad life"), ErrInternal, "beans", Details{"explode": "request"})
+	cleared := ClearPassThrough(e)
+	e.(*Error).WrappedErrPassThrough = false
+	suite.Equal(e, cleared, "should return same error without pass-through")
+	suite.Equal(Finalize(cleared), cleared, "should return same error after finalize")
+}
+
+func (suite *ClearPassThroughSuite) TestSingleWithoutPassThrough() {
+	e := NewForbiddenErr("plan", Details{"shield": "request"})
+	cleared := ClearPassThrough(e)
+	suite.Equal(e, cleared, "should return same error without pass-through")
+	suite.Equal(Finalize(cleared), cleared, "should return same error after finalize")
+}
+
+func (suite *ClearPassThroughSuite) TestWrappedWithPassThroughs() {
+	e := NewPassThroughErr(errors.New("pt1"), ErrNotFound, "not found", nil)
+	e = Wrap(e, "damp", Details{"swell": "ever"})
+	e = Wrap(e, "sore", Details{"somebody": "universe"})
+	cleared := ClearPassThrough(e)
+	tmpE := e
+	for tmpE != nil {
+		if me, ok := tmpE.(*Error); ok {
+			me.WrappedErrPassThrough = false
+			tmpE = me.WrappedErr
+		} else {
+			break
+		}
+	}
+	suite.Equal(e, cleared, "should clear all pass-through without losing information")
+	suite.Equal(Finalize(cleared), cleared, "should return same error after finalize")
+}
+
+func TestClearPassThrough(t *testing.T) {
+	suite.Run(t, new(ClearPassThroughSuite))
+}

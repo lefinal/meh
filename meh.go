@@ -65,6 +65,10 @@ type Error struct {
 	// WrappedErr is an optionally wrapped error for example added when wrapping
 	// low-level errors or using Wrap.
 	WrappedErr error
+	// WrappedErrPassThrough describes whether the WrappedErr should be returned on
+	// Finalize. This is useful if the wrapped error is relevant for other libraries,
+	// etc.
+	WrappedErrPassThrough bool
 	// Message is an internal error message that is used when generating the error
 	// message if not an empty string.
 	Message string
@@ -222,4 +226,66 @@ func NilOrWrap(err error, message string, details Details) error {
 		return Wrap(err, message, details)
 	}
 	return nil
+}
+
+// Finalize alters the given error for handing it off to other libraries. If the
+// given error is nil, nil is returned. If it contains a pass-through, indicated
+// by Error.WrappedErrPassThrough being true, the wrapped error is returned from
+// the first one, where pass-through is set. Otherwise, the error is returned as
+// with Cast.
+func Finalize(err error) error {
+	if err == nil {
+		return nil
+	}
+	// Check if pass-through found.
+	e, ok := err.(*Error)
+	for e != nil {
+		if !ok || e.WrappedErr == nil {
+			break
+		}
+		if e.WrappedErr != nil && e.WrappedErrPassThrough {
+			return e.WrappedErr
+		}
+		e, ok = e.WrappedErr.(*Error)
+	}
+	// No pass-through found.
+	return Cast(err)
+}
+
+// ClearPassThrough returns the given error with all pass-through-fields (from
+// wrapped errors as well).
+func ClearPassThrough(err error) error {
+	if err == nil {
+		return nil
+	}
+	var clearedRoot *Error
+	var cleared *Error
+	e, ok := err.(*Error)
+	for {
+		if !ok && cleared == nil {
+			return err
+		}
+		if !ok && cleared != nil {
+			return clearedRoot
+		}
+		wrappedErr := &Error{
+			Code:                  e.Code,
+			WrappedErr:            e.WrappedErr,
+			WrappedErrPassThrough: false,
+			Message:               e.Message,
+			Details:               e.Details,
+			Trace:                 e.Trace,
+		}
+		if cleared == nil {
+			clearedRoot = wrappedErr
+			cleared = clearedRoot
+		} else {
+			cleared.WrappedErr = wrappedErr
+			cleared = wrappedErr
+		}
+		if e.WrappedErr == nil {
+			return clearedRoot
+		}
+		e, ok = e.WrappedErr.(*Error)
+	}
 }

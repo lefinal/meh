@@ -1,11 +1,7 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows: ["Go"]
-    branches: [ main, alpha ]
-    types:
-      - completed
+  workflow_dispatch:
 
 jobs:
   release:

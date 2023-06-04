@@ -91,3 +91,9 @@ func NewScanRowsErr(err error, message string, query string) error {
 		},
 	}
 }
+
+// NewQueryAndScanRowsErr is used for errors returned from QueryRow with Scan.
+// Further logic might be added in the future.
+func NewQueryAndScanRowsErr(err error, message string, query string) error {
+	return NewQueryDBErr(err, message, query)
+}

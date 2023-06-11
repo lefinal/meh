@@ -1,9 +1,12 @@
 package meh
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"os"
 	"testing"
 )
 
@@ -357,4 +360,44 @@ func (suite *ClearPassThroughSuite) TestWrappedWithPassThroughs() {
 
 func TestClearPassThrough(t *testing.T) {
 	suite.Run(t, new(ClearPassThroughSuite))
+}
+
+type ErrorMarshallingSuite struct {
+	suite.Suite
+}
+
+func (suite *ErrorMarshallingSuite) TestOK() {
+	original := &Error{
+		Code: ErrNeutral,
+		WrappedErr: &Error{
+			Code:       ErrNotFound,
+			WrappedErr: os.ErrExist,
+			Message:    "read file",
+			Details: Details{
+				"filename": "hello.world",
+			},
+		},
+		Message: "get users",
+		Details: Details{
+			"since": "yesterday",
+		},
+	}
+
+	originalJSON, err := json.Marshal(original)
+	suite.Require().NoError(err, "marshal original should not fail")
+	parsed := &Error{}
+	err = json.Unmarshal(originalJSON, &parsed)
+	suite.Require().NoError(err, "unmarshal original should not fail")
+
+	fmt.Println(string(originalJSON))
+	fmt.Println(parsed)
+
+	assert.Equal(suite.T(), ErrNotFound, ErrorCode(parsed), "should keep correct error code")
+	assert.Equal(suite.T(), original.Message, parsed.Message, "should keep message")
+	assert.Equal(suite.T(), original.Details, parsed.Details, "should keep details")
+	assert.Equal(suite.T(), original.Error(), parsed.Error())
+}
+
+func TestErrorMarshalling(t *testing.T) {
+	suite.Run(t, new(ErrorMarshallingSuite))
 }

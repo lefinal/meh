@@ -1,6 +1,7 @@
 package meh
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"runtime/debug"
@@ -76,6 +77,93 @@ type Error struct {
 	Details Details
 	// Trace is the stack trace to use (set it via ApplyStackTrace).
 	Trace StackTrace
+}
+
+type jsonError struct {
+	Code                  Code            `json:"code"`
+	WrappedErr            json.RawMessage `json:"wrappedErr"`
+	WrappedErrPassThrough bool            `json:"wrappedErrPassThrough"`
+	Message               string          `json:"message"`
+	Details               Details         `json:"details"`
+	Trace                 StackTrace      `json:"trace"`
+}
+
+// MarshalJSON marshals the Error into a JSON representation.
+func (e *Error) MarshalJSON() ([]byte, error) {
+	var err error
+	// Marshal wrapped error.
+	var wrappedErrJSON json.RawMessage
+	if e.WrappedErr != nil {
+		var wrappedErrToMarshal any = e.WrappedErr
+		if _, ok := e.WrappedErr.(*Error); !ok {
+			// No meh error. Marshal and parse again into details map.
+			wrappedErrToMarshalInMehRepresentation := &Error{
+				Message: e.WrappedErr.Error(),
+			}
+			if wrappedForeignErrJSON, err := json.Marshal(e.WrappedErr); err != nil {
+				// We cannot marshal the error. Fallback to native representation.
+				e.Details["_native"] = fmt.Sprintf("%+v", e.WrappedErr)
+			} else {
+				err = json.Unmarshal(wrappedForeignErrJSON, &wrappedErrToMarshalInMehRepresentation.Details)
+				if err != nil {
+					// Some weird representation. We to the same as above and set the native
+					// representation.
+					e.Details["_native"] = fmt.Sprintf("%+v", e.WrappedErr)
+				}
+			}
+			// Final representation of our foreign meh error to marshal is ready. Marshal it.
+			wrappedErrToMarshal = wrappedErrToMarshalInMehRepresentation
+		}
+		wrappedErrJSON, err = json.Marshal(wrappedErrToMarshal)
+		if err != nil {
+			return nil, NewInternalErrFromErr(err, "marshal wrapped error", nil)
+		}
+	}
+	// Marshal final JSON representation.
+	eJSON := jsonError{
+		Code:                  e.Code,
+		WrappedErr:            wrappedErrJSON,
+		WrappedErrPassThrough: e.WrappedErrPassThrough,
+		Message:               e.Message,
+		Details:               e.Details,
+		Trace:                 e.Trace,
+	}
+	return json.Marshal(eJSON)
+}
+
+// UnmarshalJSON unmarshals an Error from JSON representation.
+func (e *Error) UnmarshalJSON(data []byte) error {
+	var eJSON jsonError
+	err := json.Unmarshal(data, &eJSON)
+	if err != nil {
+		return NewInternalErrFromErr(err, "unmarshal", nil)
+	}
+	e.Code = eJSON.Code
+	e.WrappedErr = nil
+	e.WrappedErrPassThrough = eJSON.WrappedErrPassThrough
+	e.Message = eJSON.Message
+	e.Details = eJSON.Details
+	e.Trace = eJSON.Trace
+	// Unmarshal wrapped error.
+	if eJSON.WrappedErr != nil && len(eJSON.WrappedErr) > 0 {
+		var wrappedMehErr Error
+		err = json.Unmarshal(eJSON.WrappedErr, &wrappedMehErr)
+		if err != nil {
+			// No meh error. Extract into regular error.
+			e.WrappedErr = plainError{string(eJSON.WrappedErr)}
+		} else {
+			e.WrappedErr = &wrappedMehErr
+		}
+	}
+	return nil
+}
+
+type plainError struct {
+	message string
+}
+
+func (e plainError) Error() string {
+	return e.message
 }
 
 // Error is used for implementing the error interface and printing the error

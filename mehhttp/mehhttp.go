@@ -31,6 +31,13 @@ func SetHTTPStatusCodeMapping(mapping HTTPStatusCodeMapper) {
 	httpStatusCodeMapper = mapping
 }
 
+// HTTPStatusCode retrieves the HTTP status code for the given error.
+func HTTPStatusCode(e error) int {
+	httpStatusCodeMapperMutex.RLock()
+	defer httpStatusCodeMapperMutex.RUnlock()
+	return httpStatusCodeMapper(meh.ErrorCode(e))
+}
+
 const (
 	// ErrCommunication is used for all problems regarding client communication. As
 	// communication is unstable by nature, this should not be reported as classic
@@ -54,9 +61,7 @@ func LogAndRespondError(logger *zap.Logger, w http.ResponseWriter, r *http.Reque
 		"http_req_remote_addr": r.RemoteAddr,
 	})
 	mehlog.Log(logger, e)
-	httpStatusCodeMapperMutex.RLock()
-	httpStatus := httpStatusCodeMapper(meh.ErrorCode(e))
-	httpStatusCodeMapperMutex.RUnlock()
+	httpStatus := HTTPStatusCode(e)
 	err := respondHTTP(w, "", httpStatus)
 	if err != nil {
 		mehlog.Log(logger, meh.Wrap(err, "respond http", meh.Details{

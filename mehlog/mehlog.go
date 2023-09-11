@@ -76,7 +76,7 @@ func LogToLevel(logger *zap.Logger, level zapcore.Level, err error) {
 }
 
 // logToLevel calls the correct LogToLevel method for the given zap.Logger based on the
-// zapcore.level.
+// zapcore.Level.
 func logToLevel(logger *zap.Logger, level zapcore.Level, message string, fields ...zapcore.Field) {
 	switch level {
 	case zapcore.DebugLevel:

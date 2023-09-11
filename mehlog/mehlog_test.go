@@ -78,6 +78,44 @@ func (suite *LogSuite) TestErrorMessage() {
 	suite.Equal(e.Error(), records[0].Entry.Message, "should use error message as message")
 }
 
+// TestOmitErrorMessageField assures that the error message field is not logged
+// if omitted.
+func (suite *LogSuite) TestOmitErrorMessageField() {
+	oldOmitted := omitErrorMessageField
+	OmitErrorMessageField(true)
+	defer OmitErrorMessageField(oldOmitted)
+	logger, rec := zaprec.NewRecorder(nil)
+	e := meh.Wrap(&meh.Error{Message: "inner"}, "outer", nil)
+	Log(logger, e)
+	records := rec.Records()
+	suite.Require().Len(records, 1, "should have been logged")
+	suite.Equal(e.Error(), records[0].Entry.Message, "should use error message as message")
+	fieldNames := make([]string, 0)
+	for _, field := range records[0].Fields {
+		fieldNames = append(fieldNames, field.Key)
+	}
+	suite.NotContains(fieldNames, meh.MapFieldErrorMessage, "should not contain error message")
+}
+
+// TestIncludeErrorMessageField assures that the error message field is logged if
+// not omitted.
+func (suite *LogSuite) TestIncludeErrorMessageField() {
+	oldOmitted := omitErrorMessageField
+	OmitErrorMessageField(false)
+	defer OmitErrorMessageField(oldOmitted)
+	logger, rec := zaprec.NewRecorder(nil)
+	e := meh.Wrap(&meh.Error{Message: "inner"}, "outer", nil)
+	Log(logger, e)
+	records := rec.Records()
+	suite.Require().Len(records, 1, "should have been logged")
+	suite.Equal(e.Error(), records[0].Entry.Message, "should use error message as message")
+	fieldNames := make([]string, 0)
+	for _, field := range records[0].Fields {
+		fieldNames = append(fieldNames, field.Key)
+	}
+	suite.Contains(fieldNames, meh.MapFieldErrorMessage, "should not contain error message")
+}
+
 func TestLog(t *testing.T) {
 	suite.Run(t, new(LogSuite))
 }
@@ -99,7 +137,7 @@ type logToLevelSuite struct {
 
 // expect a logToLevel call with the given in-level to log an entry with given
 // out-level.
-func (suite logToLevelSuite) expect(levelIn zapcore.Level, levelOut zapcore.Level) {
+func (suite *logToLevelSuite) expect(levelIn zapcore.Level, levelOut zapcore.Level) {
 	logger, rec := zaprec.NewRecorder(nil)
 	logToLevel(logger, levelIn, "meow")
 	suite.Len(rec.Records(), 1, "should have been logged")

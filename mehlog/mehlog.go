@@ -8,6 +8,18 @@ import (
 	"sync"
 )
 
+var omitErrorMessageField = false
+var omitErrorMessageFieldMutex sync.RWMutex
+
+// OmitErrorMessageField sets whether the error message field with key
+// meh.MapFieldErrorMessage should be omitted in logs and only output as log
+// message in order to improve human readability.
+func OmitErrorMessageField(omit bool) {
+	omitErrorMessageFieldMutex.Lock()
+	defer omitErrorMessageFieldMutex.Unlock()
+	omitErrorMessageField = omit
+}
+
 var (
 	// defaultLevelTranslator is the default LevelTranslator that translates every
 	// meh.Code to zapcore.ErrorLevel.
@@ -48,9 +60,15 @@ func Log(logger *zap.Logger, err error) {
 func LogToLevel(logger *zap.Logger, level zapcore.Level, err error) {
 	e := meh.Cast(err)
 	// Build fields.
+	omitErrorMessageFieldMutex.RLock()
+	omitErrorMessageField := omitErrorMessageField
+	omitErrorMessageFieldMutex.RUnlock()
 	fieldMap := meh.ToMap(e)
 	fields := make([]zap.Field, 0, len(fieldMap))
 	for k, v := range fieldMap {
+		if omitErrorMessageField && k == meh.MapFieldErrorMessage {
+			continue
+		}
 		fields = append(fields, zap.Any(k, v))
 	}
 	// Log it.
@@ -58,7 +76,7 @@ func LogToLevel(logger *zap.Logger, level zapcore.Level, err error) {
 }
 
 // logToLevel calls the correct LogToLevel method for the given zap.Logger based on the
-// zapcore.level.
+// zapcore.Level.
 func logToLevel(logger *zap.Logger, level zapcore.Level, message string, fields ...zapcore.Field) {
 	switch level {
 	case zapcore.DebugLevel:

@@ -58,7 +58,7 @@ jobs:
         run: make dep
 
       - name: Memory sanitization
-        run: make msan
+        run: CC=clang CXX=clang++ go test -msan -short ./...
 
   lint:
     runs-on: ubuntu-latest

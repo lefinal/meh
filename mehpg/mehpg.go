@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/jackc/pgconn"
+	pgconnv5 "github.com/jackc/pgx/v5/pgconn"
 	"github.com/lefinal/meh"
 	"strings"
 )
@@ -29,6 +30,7 @@ func NewQueryDBErr(err error, message string, query string, args ...any) error {
 	details["args"] = args
 	// Check if postgres error.
 	var pgErr *pgconn.PgError
+	var pgErrV5 *pgconnv5.PgError
 	if errors.As(err, &pgErr) {
 		details["pg_err"] = *pgErr
 		details["sqlstate"] = pgErr.Code
@@ -47,6 +49,37 @@ func NewQueryDBErr(err error, message string, query string, args ...any) error {
 				WrappedErr: err,
 			}
 		} else if strings.HasPrefix(pgErr.Code, ErrCodePrefixSyntaxErrOrAccessRuleViolation) {
+			// Syntax error
+			finalDetailedErr = &meh.Error{
+				Code:       meh.ErrInternal,
+				Message:    "syntax error",
+				WrappedErr: err,
+			}
+		} else {
+			// Otherwise, probably internal error.
+			finalDetailedErr = &meh.Error{
+				Code:       meh.ErrInternal,
+				WrappedErr: err,
+			}
+		}
+	} else if errors.As(err, &pgErrV5) {
+		details["pg_err"] = *pgErrV5
+		details["sqlstate"] = pgErrV5.Code
+		// Check for certain prefixes.
+		if strings.HasPrefix(pgErrV5.Code, ErrCodePrefixIntegrityConstraintViolation) {
+			// Constraint violation.
+			finalDetailedErr = &meh.Error{
+				Code:       meh.ErrBadInput,
+				Message:    "constraint violation",
+				WrappedErr: err,
+			}
+		} else if strings.HasPrefix(pgErrV5.Code, ErrCodePrefixDataException) {
+			finalDetailedErr = &meh.Error{
+				Code:       meh.ErrBadInput,
+				Message:    "data exception",
+				WrappedErr: err,
+			}
+		} else if strings.HasPrefix(pgErrV5.Code, ErrCodePrefixSyntaxErrOrAccessRuleViolation) {
 			// Syntax error
 			finalDetailedErr = &meh.Error{
 				Code:       meh.ErrInternal,

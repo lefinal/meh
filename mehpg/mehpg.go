@@ -81,17 +81,10 @@ func NewQueryDBErr(err error, message string, query string, args ...any) error {
 }
 
 // NewScanRowsErr creates a new meh.ErrInternal with the given error and message
-// and saves the provided query to details.
+// and saves the provided query to details. The used logic is currently the same
+// as NewQueryDBErr but placed in a separate method for future adjustments.
 func NewScanRowsErr(err error, message string, query string, args ...any) error {
-	return &meh.Error{
-		Code:       meh.ErrInternal,
-		WrappedErr: err,
-		Message:    message,
-		Details: meh.Details{
-			"query": query,
-			"args":  args,
-		},
-	}
+	return NewQueryDBErr(err, message, query, args...)
 }
 
 // NewQueryAndScanRowsErr is used for errors returned from QueryRow with Scan.

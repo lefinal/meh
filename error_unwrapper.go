@@ -1,7 +1,9 @@
 package meh
 
 // ErrorUnwrapper is used for iterating over the recursive structure of wrapped
-// errors in Error.WrappedErr.
+// errors in Error.WrappedErr. Errors wrapped the standard way, like with
+// fmt.Errorf and %w or errors.Join, are followed as well, so a meh error keeps
+// being found when other libraries wrap it.
 type ErrorUnwrapper struct {
 	// awaitFirstNext is a flag used for skipping the first unwrap. This is needed
 	// because otherwise we would need to wrap the initial error.
@@ -37,9 +39,19 @@ func (it *ErrorUnwrapper) Next() bool {
 		it.awaitFirstNext = false
 		return true
 	}
-	if e, ok := it.current.(*Error); ok {
+	switch e := it.current.(type) {
+	case *Error:
 		it.current = e.WrappedErr
-	} else {
+	case interface{ Unwrap() error }:
+		it.current = e.Unwrap()
+	case interface{ Unwrap() []error }:
+		// Follow the first of joined errors, which errors.Join keeps as the
+		// primary one.
+		it.current = nil
+		if errs := e.Unwrap(); len(errs) > 0 {
+			it.current = errs[0]
+		}
+	default:
 		it.current = nil
 	}
 	return it.current != nil

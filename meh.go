@@ -166,6 +166,12 @@ func (e plainError) Error() string {
 	return e.message
 }
 
+// Unwrap returns the wrapped error, so errors.Is and errors.As look through
+// meh errors.
+func (e *Error) Unwrap() error {
+	return e.WrappedErr
+}
+
 // Error is used for implementing the error interface and printing the error
 // string by unwrapping errors. The error string will not contain the error code
 // or any further details but only messages.
@@ -176,11 +182,16 @@ func (e *Error) Error() string {
 		var message string
 		// We cannot use the normal cast here, because it adds an extra wrapper to
 		// non-meh errors.
-		if cast, ok := it.Current().(*Error); ok {
-			message = cast.Message
-		} else {
-			message = it.Current().Error()
+		cast, ok := it.Current().(*Error)
+		if !ok {
+			// The message of a non-meh error already contains the messages of
+			// the errors it wraps.
+			if message = it.Current().Error(); message != "" {
+				segments = append(segments, message)
+			}
+			break
 		}
+		message = cast.Message
 		// Skip empty messages.
 		if message == "" {
 			continue
@@ -191,12 +202,24 @@ func (e *Error) Error() string {
 	return strings.Join(segments, ": ")
 }
 
-// ErrorCode returns the first non ErrNeutral Code for the given error.
+// ErrorCode returns the first non ErrNeutral Code for the given error. Errors
+// that are no meh errors are looked through, so a meh error wrapped by other
+// libraries keeps its code. If there is none, but non-meh errors, the code is
+// ErrUnexpected.
 func ErrorCode(err error) Code {
+	foreign := false
 	for it := NewErrorUnwrapper(err); it.Next(); {
-		if c := Cast(it.Current()).Code; c != ErrNeutral {
-			return c
+		e, ok := it.Current().(*Error)
+		if !ok {
+			foreign = true
+			continue
 		}
+		if e.Code != ErrNeutral {
+			return e.Code
+		}
+	}
+	if foreign {
+		return ErrUnexpected
 	}
 	return ErrNeutral
 }
